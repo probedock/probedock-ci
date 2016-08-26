@@ -1,0 +1,28 @@
+version: '2'
+
+services:
+  jenkins:
+    image: probedock/jenkins
+    container_name: jenkins
+    volumes_from:
+      - jenkinsData
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /jenkins/envs:/envs
+      - /jenkins/dumps:/dumps
+    networks:
+      - ci
+    ports:
+      - 8080:8080
+
+  jenkinsData:
+    image: probedock/jenkins
+    container_name: jenkins_data
+    entrypoint: /bin/bash
+    networks:
+      - ci
+    volumes:
+      - /jenkins/home:/var/jenkins_home
+
+networks:
+  ci:

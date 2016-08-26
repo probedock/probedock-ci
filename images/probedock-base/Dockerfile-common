@@ -1,0 +1,10 @@
+FROM probedock/probedock-base
+
+COPY probedock /usr/src/app/
+
+RUN bundle install --without development test
+
+# throw errors if Gemfile has been modified since Gemfile.lock
+RUN bundle config --global frozen 1
+
+

@@ -1,0 +1,143 @@
+version: '2'
+
+services:
+  _common:
+    image: jenkinsci/jenkins:2.3
+    environment:
+      RAILS_ENV: production
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD:
+      PROBEDOCK_DATABASE_HOST: ${PROBEDOCK_ENV}_db
+      PROBEDOCK_DATABASE_NAME: probedock
+      PROBEDOCK_DATABASE_USERNAME: probedock
+      PROBEDOCK_DATABASE_PASSWORD:
+      PROBEDOCK_REDIS_URL: "${PROBEDOCK_ENV}_cache:6379:0"
+      PROBEDOCK_SECRET_KEY_BASE:
+      PROBEDOCK_JWT_SECRET:
+      PROBEDOCK_LOG_LEVEL:
+      PROBEDOCK_LOG_TO_STDOUT: "1"
+      PROBEDOCK_MAIL_ADDRESS:
+      PROBEDOCK_MAIL_PORT:
+      PROBEDOCK_MAIL_DOMAIN:
+      PROBEDOCK_MAIL_USERNAME:
+      PROBEDOCK_MAIL_PASSWORD:
+      PROBEDOCK_MAIL_AUTHENTICATION:
+      PROBEDOCK_MAIL_FROM:
+      PROBEDOCK_MAIL_FROM_NAME:
+      PROBEDOCK_APP_PROTOCOL:
+      PROBEDOCK_APP_HOST:
+      PROBEDOCK_APP_PORT:
+      PROBEDOCK_UNICORN_USER: root
+      PROBEDOCK_UNICORN_WORKERS:
+
+  app:
+    image: probedock/probedock-app
+    extends:
+      service: _common
+    networks:
+      - probenet
+
+  assets:
+    image: probedock/probedock-common
+    extends: task
+    volumes_from:
+      - rp
+
+  bakDb:
+    image: probedock/postgres
+    extends:
+      service: _common
+    volumes:
+      - ${PROBEDOCK_DATA_PATH}/${PROBEDOCK_ENV}/backups/postgresql:/backups
+    networks:
+      - probenet
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      ENV: ${PROBEDOCK_ENV}
+      DATE: ${PROBEDOCK_DATE}
+    entrypoint: /scripts/backup.sh
+
+  cache:
+    image: redis:3.2.0
+    container_name: ${PROBEDOCK_ENV}_cache
+    command: redis-server --appendonly yes
+    volumes:
+      - ${PROBEDOCK_DATA_PATH}/${PROBEDOCK_ENV}/redis/data:/data
+    networks:
+      - probenet
+
+  db:
+    image: probedock/postgres
+    extends:
+      service: _common
+    container_name: ${PROBEDOCK_ENV}_db
+    volumes:
+      - ${PROBEDOCK_DATA_PATH}/${PROBEDOCK_ENV}/postgresql/data:/var/lib/postgresql/data
+    networks:
+      - probenet
+
+  dropAndCreateDb:
+    image: probedock/postgres
+    extends:
+      service: _common
+    networks:
+      - probenet
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      ENV: ${PROBEDOCK_ENV}
+
+  job:
+    image: probedock/probedock-job
+    extends:
+      service: _common
+    networks:
+      - probenet
+    environment:
+      QUEUE: "*"
+      INTERVAL: "2"
+      TERM_CHILD: "1"
+
+  loadDump:
+    image: probedock/postgres
+    extends:
+      service: _common
+    volumes:
+      - /jenkins/dumps:/dumps
+    networks:
+      - probenet
+    environment:
+      PGPASSWORD: ${PROBEDOCK_DATABASE_PASSWORD}
+      ENV: ${PROBEDOCK_ENV}
+      DUMP_PATH: ${DUMP_PATH}
+
+  rp:
+    image: probedock/nginx
+    container_name: ${PROBEDOCK_ENV}_rp
+    ports:
+      - ${PROBEDOCK_DOCKER_WEB_CONTAINER_PORT}:80
+    networks:
+      - probenet
+
+  task:
+    image: probedock/probedock-common
+    entrypoint: rake
+    command: -T
+    extends:
+      service: _common
+    networks:
+      - probenet
+
+  waitDb:
+    image: probedock/jenkins
+    networks:
+      - probenet
+    entrypoint: ./wait-for-it.sh ${PROBEDOCK_ENV}_db:5432
+
+  waitCache:
+    image: probedock/jenkins
+    networks:
+      - probenet
+    entrypoint: ./wait-for-it.sh ${PROBEDOCK_ENV}_cache:6379
+
+networks:
+  probenet:

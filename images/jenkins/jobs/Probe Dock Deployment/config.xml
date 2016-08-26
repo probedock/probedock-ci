@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.2">
+  <actions/>
+  <description>Do the magic!</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <org.biouno.unochoice.ChoiceParameter plugin="uno-choice@1.4">
+          <name>Action</name>
+          <description></description>
+          <randomName>choice-parameter-20050385260670</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <script>def envs = new File(&apos;/envs&apos;)
+
+def files = envs.list(new FilenameFilter() {
+    @Override
+    public boolean accept(File file, String name) {
+        def currentFile = new File(file.getPath() + &apos;/&apos; + name);
+        return currentFile.isFile() &amp;&amp; !currentFile.isHidden()
+    }
+});
+
+files.size() &gt; 0 ? [&apos;New environment&apos;, &apos;Choose an existing environment:selected&apos;] : [ &apos;New environment:selected&apos; ]</script>
+            <fallbackScript></fallbackScript>
+          </script>
+          <projectName>OneClick</projectName>
+          <choiceType>PT_RADIO</choiceType>
+          <filterable>false</filterable>
+        </org.biouno.unochoice.ChoiceParameter>
+        <org.biouno.unochoice.DynamicReferenceParameter plugin="uno-choice@1.4">
+          <name>ProbeDockEnv</name>
+          <description></description>
+          <randomName>choice-parameter-20963240728637</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <script>def envs = new File(&apos;/envs&apos;)
+
+def files = envs.list(new FilenameFilter() {
+    @Override
+    public boolean accept(File file, String name) {
+        def currentFile = new File(file.getPath() + &apos;/&apos; + name);
+        return currentFile.isFile() &amp;&amp; !currentFile.isHidden()
+    }
+});
+
+if (Action.equalsIgnoreCase(&apos;New environment&apos;) || files.size() == 0) {
+  html = &quot;&lt;input type=\&quot;text\&quot; name=\&quot;value\&quot; value=\&quot;default\&quot; /&gt;&quot;
+
+  if (files.size() == 0) {
+    html += &quot;&lt;p&gt;No environment exists, you must create at least one environment&lt;/p&gt;&quot;
+  }
+}
+else if (Action.equalsIgnoreCase(&apos;Choose an existing environment&apos;)) {
+  html = &quot;&lt;select name=\&quot;value\&quot;&gt;&quot;
+
+  for (int i = 0; i &lt; files.size(); i++) {
+    html += &quot;&lt;option value=\&quot;&quot; + files[i] + &quot;\&quot;&gt;&quot; + files[i] + &quot;&lt;/option&gt;&quot;
+  }
+
+  html += &quot;&lt;/select&gt;&quot;
+}
+else {
+  html = &quot;&lt;p&gt;Choose to create a new environment or to use an existing one.&quot;
+}
+
+html</script>
+            <fallbackScript></fallbackScript>
+          </script>
+          <projectName>OneClick</projectName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>Action</referencedParameters>
+          <choiceType>ET_FORMATTED_HTML</choiceType>
+          <omitValueField>true</omitValueField>
+        </org.biouno.unochoice.DynamicReferenceParameter>
+        <org.biouno.unochoice.DynamicReferenceParameter plugin="uno-choice@1.4">
+          <name>Task</name>
+          <description></description>
+          <randomName>choice-parameter-48185743167256</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <script>html = &apos;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th style=&quot;width:28%;&quot;&gt;Task&lt;/th&gt;&lt;th style=&quot;width:72%;&quot;&gt;Description&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&apos;
+
+if (Action.equalsIgnoreCase(&apos;New Environment&apos;)) {
+  html += &apos;&lt;tr&gt;&lt;td&gt;&lt;input type=&quot;radio&quot; name=&quot;value&quot; value=&quot;CreateEnvironment&quot; checked&gt; &lt;strong&gt;Create a new environment&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;During the creation of a new environment, you will be gudied to setup various configuration values and passwords. You should keep a copy of the passwords in a safe place. At the end of the configuration, you will have the possibility to directly deploy Probe Dock for the first time on this new environment.&lt;/td&gt;&lt;/tr&gt;&apos;
+}
+else {
+  html += &apos;&lt;tr&gt;&lt;td&gt;&lt;input type=&quot;radio&quot; name=&quot;value&quot; value=&quot;UpdateEnvironment&quot;&gt; &lt;strong&gt;Update the environment&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;You will have the possibility to update the environment configuration through this task. &lt;br/&gt;&lt;strong&gt;Remark&lt;/strong&gt;: You will not be able to update the passwords. For that, you have the possibility to go in the credentials plugin UI. Take care that updating a password will not update it in the Probe Dock infra.&lt;/td&gt;&lt;/tr&gt;&apos;
+
+  if (!new File(&quot;/envs/.&quot; + ProbeDockEnv + &quot;-firstDeploymentDone&quot;).exists()) {
+    html += &apos;&lt;tr&gt;&lt;td&gt;&lt;input type=&quot;radio&quot; name=&quot;value&quot; value=&quot;FirstDeploy&quot;&gt; &lt;strong&gt;Deploy for the first time&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;Various operations must be done only once to deploy Probe Dock. This task is only available once.&lt;/td&gt;&lt;/tr&gt;&apos;
+  }
+
+  html += &apos;&lt;tr&gt;&lt;td&gt;&lt;input type=&quot;radio&quot; name=&quot;value&quot; value=&quot;Deploy&quot; checked&gt; &lt;strong&gt;Deploy a new version&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;This task allow you to deploy a new version of Probe Dock or to redeploy an existing one.&lt;/td&gt;&lt;/tr&gt;&apos;
+
+  html += &apos;&lt;tr&gt;&lt;td&gt;&lt;input type=&quot;radio&quot; name=&quot;value&quot; value=&quot;DeployFromDump&quot;&gt; &lt;strong&gt;Deploy a new version and load a database dump&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;This task is pretty much the same than the previous one. In addition, a dump is loaded before doing any migration. This task allows to deploy a Probe Dock with existing data or data from another environment&lt;/td&gt;&lt;/tr&gt;&apos;
+
+  html += &apos;&lt;tr&gt;&lt;td&gt;&lt;input type=&quot;radio&quot; name=&quot;value&quot; value=&quot;Backup&quot;&gt; &lt;strong&gt;Make a backup of the database&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;This task perform a backup of the PostgreSQL database. &lt;br/&gt;&lt;strong&gt;Remark&lt;/strong&gt;: Probe Dock will be stopped before the backup is done and restarted right after the backup finished&lt;/td&gt;&lt;/tr&gt;&apos;
+}
+
+html += &apos;&lt;/tbody&gt;&lt;/table&gt;&apos;</script>
+            <fallbackScript></fallbackScript>
+          </script>
+          <projectName>OneClick</projectName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>Action,ProbeDockEnv</referencedParameters>
+          <choiceType>ET_FORMATTED_HTML</choiceType>
+          <omitValueField>true</omitValueField>
+        </org.biouno.unochoice.DynamicReferenceParameter>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.4">
+    <script>node {
+    checkout(
+        changelog: false,
+        poll: false,
+        scm: [
+            $class: &apos;GitSCM&apos;,
+            branches: [
+                [name: &apos;**&apos;]
+            ],
+            doGenerateSubmoduleConfigurations: false,
+            extensions: [
+                [$class: &apos;WipeWorkspace&apos;],
+                [$class: &apos;RelativeTargetDirectory&apos;, relativeTargetDir: &apos;baseCi&apos; ]
+            ],
+            submoduleCfg: [],
+            userRemoteConfigs: [[
+                refspec: env.PROBEDOCK_CI_DEFAULT_VERSION,
+                url: env.REPO_CI
+            ]]
+        ]
+    )
+
+    env.PROBEDOCK_ENV = ProbeDockEnv
+
+    def repos = load(&apos;baseCi/pipelines/src/utils/Repos.groovy&apos;)
+
+    load(&apos;baseCi/pipelines/src/utils/ProbeDockVersion.groovy&apos;).version()
+    repos.cloneProbeDock()
+
+    load(&apos;baseCi/pipelines/src/utils/PipelineVersion.groovy&apos;).version()
+    repos.cloneCi()
+
+    load(&apos;ci/pipelines/src/utils/Launcher.groovy&apos;).launch(Task)
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+</flow-definition>

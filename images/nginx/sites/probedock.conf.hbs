@@ -1,0 +1,64 @@
+{{#with_members "app=probedock"}}
+upstream probedock_cluster {
+    {{#each members}}
+    server {{address}}:3000;
+    {{/each}}
+}
+{{/with_members}}
+
+server {
+    listen 80 default_server;
+    server_name _;
+
+    root /usr/src/app/public;
+
+    location / {
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+
+        set $maintenance 0;
+
+        # Set maintenance mode if maintenance directory exists...
+        if (-d $document_root/maintenance) {
+            set $maintenance 1;
+        }
+
+        # but serve everything under the public maintenance directory.
+        if ($uri ~ ^/maintenance/) {
+            set $maintenance 0;
+        }
+
+        # If maintenance mode is set, serve the maintenance page.
+        if ($maintenance) {
+            rewrite (.*) /maintenance/maintenance.html last;
+        }
+
+        # Serve cached index if it exists.
+        if (-f $request_filename/index.html) {
+            rewrite (.*) $1/index.html break;
+        }
+
+        # Serve cached page if it exists.
+        if (-f $request_filename.html) {
+            rewrite (.*) $1.html break;
+        }
+
+        # Pass API requests to app.
+        if ($uri ~ ^/api/) {
+            {{#with_members "app=probedock"}}
+            proxy_pass http://probedock_cluster;
+            break;
+            {{else}}
+            return 502;
+            {{/with_members}}
+        }
+
+        # Serve index otherwise.
+        if (!-f $request_filename) {
+            rewrite (.*) /index.html break;
+        }
+    }
+}

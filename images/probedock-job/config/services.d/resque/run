@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv bash
+
+cd /usr/src/app
+
+exec rake resque:work

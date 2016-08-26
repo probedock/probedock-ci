@@ -1,0 +1,15 @@
+#!/usr/bin/with-contenv bash
+
+pid=$$
+
+sigterm() {
+  kill -INT $pid
+}
+
+trap sigterm SIGTERM
+
+/opt/bin/serf agent --config-file /etc/serf.conf &
+
+pid=$!
+
+wait

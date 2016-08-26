@@ -1,0 +1,7 @@
+#!/usr/bin/with-contenv bash
+
+rm -f /usr/src/app/tmp/pids/server.pid
+
+cd /usr/src/app
+
+exec rails server -e production -b 0.0.0.0
