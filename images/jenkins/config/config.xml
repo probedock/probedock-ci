@@ -42,7 +42,7 @@
           <string>PROBEDOCK_CI_DEFAULT_VERSION</string>
           <string>master</string>
           <string>REPO_CI</string>
-          <string>https://github.com/Prevole/probedock-ci</string>
+          <string>https://github.com/probedock/probedock-ci</string>
           <string>REPO_PROBEDOCK</string>
           <string>https://github.com/probedock/probedock</string>
         </tree-map>
