@@ -19,6 +19,7 @@
     <string>method java.util.Properties store java.io.OutputStream java.lang.String</string>
     <string>method java.util.Random nextInt int</string>
     <string>method jenkins.model.Jenkins getExtensionList java.lang.String</string>
+    <string>method java.io.File list</string>
     <string>method java.io.File list java.io.FilenameFilter</string>
     <string>method java.io.File getPath</string>
     <string>method java.io.File isFile</string>

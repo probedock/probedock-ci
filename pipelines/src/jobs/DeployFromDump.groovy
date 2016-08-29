@@ -51,8 +51,7 @@ def executeJob() {
      * Probe Dock must be done during the assets are built and copied to rp container
      */
     stage 'Compile assets'
-    // TODO: Uncomment line
-    //sh 'ci/pipelines/scripts/build-assets.sh'
+    sh 'ci/pipelines/scripts/build-assets.sh'
 
     /**
      * Make a backup of the PostgreSQL database
