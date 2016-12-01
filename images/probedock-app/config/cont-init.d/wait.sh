@@ -11,6 +11,7 @@ done
 
 REDIS_ADDRESS=$(echo "$PROBEDOCK_REDIS_URL"|cut -d : -f 1)
 REDIS_PORT=$(echo "$PROBEDOCK_REDIS_URL"|cut -d : -f 2)
+echo > "/dev/tcp/$REDIS_ADDRESS/$REDIS_PORT")
 until (echo > "/dev/tcp/$REDIS_ADDRESS/$REDIS_PORT") >/dev/null 2>&1; do
   >&2 echo "/dev/tcp/$REDIS_ADDRESS/$REDIS_PORT"
   >&2 echo "Redis is unavailable - waiting"
