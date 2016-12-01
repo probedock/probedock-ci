@@ -32,6 +32,7 @@ services:
 
   app:
     image: probedock/probedock-app
+    restart: always
     extends:
       service: _common
     networks:
@@ -61,6 +62,7 @@ services:
     image: redis:3.2.0
     container_name: ${PROBEDOCK_ENV}_cache
     command: redis-server --appendonly yes
+    restart: always
     volumes:
       - ${PROBEDOCK_DATA_PATH}/${PROBEDOCK_ENV}/redis/data:/data
     networks:
@@ -71,6 +73,7 @@ services:
     extends:
       service: _common
     container_name: ${PROBEDOCK_ENV}_db
+    restart: always
     volumes:
       - ${PROBEDOCK_DATA_PATH}/${PROBEDOCK_ENV}/postgresql/data:/var/lib/postgresql/data
     networks:
@@ -88,6 +91,7 @@ services:
 
   job:
     image: probedock/probedock-job
+    restart: always
     extends:
       service: _common
     networks:
@@ -113,6 +117,7 @@ services:
   rp:
     image: probedock/nginx
     container_name: ${PROBEDOCK_ENV}_rp
+    restart: always
     ports:
       - ${PROBEDOCK_DOCKER_WEB_CONTAINER_PORT}:80
     networks:
