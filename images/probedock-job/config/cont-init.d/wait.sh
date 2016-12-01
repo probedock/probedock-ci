@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/with-contenv sh
 set -e
 
 export PGPASSWORD="$PROBEDOCK_DATABASE_PASSWORD"
